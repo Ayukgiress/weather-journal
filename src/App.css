@@ -1,0 +1,68 @@
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: url("https://images.pexels.com/photos/20798015/pexels-photo-20798015/free-photo-of-white-cloud-over-building.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1");
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 90vh;
+  background-size: cover;
+
+}
+
+h1 {
+ display: flex;
+ text-align: left;
+ justify-content: left;
+ width: 30vw;
+ position: relative;
+}
+
+.main-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background-image: url("https://images.pexels.com/photos/3560044/pexels-photo-3560044.jpeg?auto=compress&cs=tinysrgb&w=600");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  height: 75vh;
+  width: 35vw;
+  border-radius: 10px;
+}
+
+.inputsFields {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+label {
+  display: flex;
+  text-align: left;
+  justify-content: left;
+  font-size: 20px;
+  width: 28vw;
+
+}
+
+.dat, .weth, .temp {
+  width: 30vw;
+  height: 5vh;
+  padding: 5px;
+  border-radius: 5px;
+  font-size: 20px;
+  outline: none;
+}
+
+.desc {
+  width: 30vw;
+  height: 15vh;
+  outline: none;
+  font-size: 20px;
+  border-radius: 5px;
+
+}
