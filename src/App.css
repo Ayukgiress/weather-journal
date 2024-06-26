@@ -2,12 +2,21 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: url("https://images.pexels.com/photos/20798015/pexels-photo-20798015/free-photo-of-white-cloud-over-building.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1");
+  background-color: rgb(17, 16, 16);
+  /* background-image: url("https://images.unsplash.com/photo-1603288967520-f3e04381dc02?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
   background-position: center;
   background-repeat: no-repeat;
-  height: 90vh;
+  height: 90vh; */
   background-size: cover;
 
+}
+
+.result {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  color: white;
 }
 
 h1 {
@@ -32,24 +41,7 @@ h1 {
   border-radius: 10px;
 }
 
-.inputsFields {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-label {
-  display: flex;
-  text-align: left;
-  justify-content: left;
-  font-size: 20px;
-  width: 28vw;
-
-}
-
-.dat, .weth, .temp {
+.dat {
   width: 30vw;
   height: 5vh;
   padding: 5px;
