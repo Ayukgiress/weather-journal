@@ -16,15 +16,22 @@ function Home() {
 
                 const { weather, temperature } = await fetchWeatherData(latitude, longitude);
 
-                const response = await axios.post('http://localhost:5000/', {
-                    date,
-                    description,
-                    weather,
-                    temperature,
-                    latitude,
-                    longitude
+                const response = await fetch('http://localhost:5000/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        date,
+                        description,
+                        weather,
+                        temperature,
+                        latitude,
+                        longitude
+                    })
                 });
-                setEntries([...entries, response.data]);
+                const data = await response.json();
+                setEntries([...entries, data]);
                 setError(null);
             } catch (error) {
                 console.error('Error adding entry:', error);
@@ -42,7 +49,7 @@ function Home() {
     };
 
     const fetchWeatherData = async (latitude, longitude) => {
-        const apiKey = '44a1147ed2527a0c66967dd206194156'; // Replace this with your own API key
+        const apiKey = '44a1147ed2527a0c66967dd206194156'; 
         const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`;
 
         try {
@@ -78,35 +85,55 @@ function Home() {
         }
     };
 
+    const fetchAllEntries = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/');
+            setEntries(response.data);
+            setError(null);
+        } catch (error) {
+            console.error('Error fetching entries:', error);
+            setError('Failed to fetch entries. Please try again.');
+        }
+    };
+
     return (
-        <div>
+        <div className='container'>
+            <div className='main-container'>
+            <h1>Weather journal</h1>
+            <label htmlFor="date">Date</label>
             <input
                 name='date'
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-            />
+            className='dat'/>
+          <label htmlFor="description">Description</label>
+
             <input
                 name='description'
                 type="text"
                 placeholder="Description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-            />
-            <button onClick={addEntry}>Add Entry</button>
+            className='desc'/>
+            <div className='btn'>
+             <button onClick={addEntry}>Add Entry</button>
+             <button onClick={fetchAllEntries}>View Entries</button>
+            </div> 
+</div>
             {error && <p style={{ color: 'red' }}>{error}</p>}
-            <ul>
+            <div className='results'>
                 {entries.map(entry => (
-                    <li key={entry.id}>
+                    <div key={entry.id} className='result'>
                         <p>Date: {entry.date}</p>
                         <p>Description: {entry.description}</p>
                         <p>Weather: {entry.weather}</p>
                         <p>Temperature: {entry.temperature} °C</p>
                         <button onClick={() => deleteEntry(entry.id)}>Delete</button>
                         <button onClick={() => updateEntry(entry.id, { /* Updated data */ })}>Update</button>
-                    </li>
+                    </div>
                 ))}
-            </ul>
+            </div>
         </div>
     );
 }
