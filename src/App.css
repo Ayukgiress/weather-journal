@@ -2,20 +2,54 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: url("https://images.pexels.com/photos/20798015/pexels-photo-20798015/free-photo-of-white-cloud-over-building.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1");
+  background-image: url("https://images.unsplash.com/photo-1603288967520-f3e04381dc02?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
   background-position: center;
   background-repeat: no-repeat;
   height: 90vh;
   background-size: cover;
+}
 
+.results {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  flex-wrap: wrap;
+  border-radius: 10px;
+  color: rgb(252, 249, 249);
+  background-color: rgb(4, 1, 10);
+  margin-top: 3%;
+  height: 95vh;
+}
+
+.result {
+  font-size: 15px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4rem;
+}
+
+button {
+  background-color: rgb(7, 31, 56);
+  color: rgb(5, 5, 5);
+  width: 8vw;
+  height: 5vh;
+  padding: 5px;
+  border-radius: 5px;
+  outline: none;
+  border-color: black;
+  font-size: 16px;
 }
 
 h1 {
- display: flex;
- text-align: left;
- justify-content: left;
- width: 30vw;
- position: relative;
+  display: flex;
+  text-align: left;
+  justify-content: left;
+  color: rgb(5, 5, 37);
+  height: 7vh;
 }
 
 .main-container {
@@ -27,35 +61,30 @@ h1 {
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-  height: 75vh;
+  gap: 1.5rem;
+  height: 85vh;
   width: 35vw;
   border-radius: 10px;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px,
+    rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px,
+    rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
 }
 
-.inputsFields {
+.container {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
   gap: 1rem;
 }
 
-label {
-  display: flex;
-  text-align: left;
-  justify-content: left;
-  font-size: 20px;
-  width: 28vw;
-
-}
-
-.dat, .weth, .temp {
+.dat {
   width: 30vw;
   height: 5vh;
   padding: 5px;
   border-radius: 5px;
   font-size: 20px;
   outline: none;
+  background-color: rgb(223, 218, 212);
 }
 
 .desc {
@@ -64,5 +93,10 @@ label {
   outline: none;
   font-size: 20px;
   border-radius: 5px;
+}
 
+label {
+  width: 30vw;
+  font-size: 20px;
+  font-weight: bold;
 }
