@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { FaPlus, FaList, FaTrash, FaEdit, FaCloud, FaThermometerHalf, FaCalendarAlt, FaMapMarkerAlt } from 'react-icons/fa';
 
 function Home() {
     const [entries, setEntries] = useState([]);
     const [date, setDate] = useState('');
+    const [location, setLocation] = useState('');
     const [description, setDescription] = useState('');
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [viewingEntries, setViewingEntries] = useState(false);
+    const [selectedEntry, setSelectedEntry] = useState(null);
+    const [editingEntry, setEditingEntry] = useState(null);
 
     const addEntry = async () => {
-        if (date && description) {
+        if (date && location && description) {
+            setLoading(true);
+            setError(null);
             try {
-                const position = await getCurrentPosition();
-                const latitude = position.coords.latitude;
-                const longitude = position.coords.longitude;
-
+                const { latitude, longitude } = await fetchCoordinates(location);
                 const { weather, temperature } = await fetchWeatherData(latitude, longitude);
 
                 const response = await fetch('http://localhost:5000/', {
@@ -31,14 +36,24 @@ function Home() {
                     })
                 });
                 const data = await response.json();
-                setEntries([...entries, data]);
-                setError(null);
+                const entryWithLocation = { ...data, location };
+                setEntries([...entries, entryWithLocation]);
+
+                // Store location in localStorage for persistence
+                localStorage.setItem(`entry_location_${data.id}`, location);
+
+                setDate('');
+                setLocation('');
+                setDescription('');
+                setViewingEntries(true);
             } catch (error) {
                 console.error('Error adding entry:', error);
-                setError('Failed to add entry. Please try again.');
+                setError('Failed to add entry. Please check your connection and try again.');
+            } finally {
+                setLoading(false);
             }
         } else {
-            setError('Date and description are required.');
+            setError('Date, location, and description are required.');
         }
     };
 
@@ -48,8 +63,26 @@ function Home() {
         });
     };
 
+    const fetchCoordinates = async (cityName) => {
+        const apiKey = '44a1147ed2527a0c66967dd206194156';
+        const apiUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(cityName)}&limit=1&appid=${apiKey}`;
+
+        try {
+            const response = await axios.get(apiUrl);
+            if (response.data && response.data.length > 0) {
+                const { lat, lon } = response.data[0];
+                return { latitude: lat, longitude: lon };
+            } else {
+                throw new Error('City not found');
+            }
+        } catch (error) {
+            console.error('Error fetching coordinates:', error);
+            throw error;
+        }
+    };
+
     const fetchWeatherData = async (latitude, longitude) => {
-        const apiKey = '44a1147ed2527a0c66967dd206194156'; 
+        const apiKey = '44a1147ed2527a0c66967dd206194156';
         const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`;
 
         try {
@@ -63,77 +96,257 @@ function Home() {
         }
     };
 
-    const updateEntry = async (id, newData) => {
+    const updateEntry = async (id, updatedData) => {
+        setLoading(true);
+        setError(null);
         try {
-            const response = await axios.put(`http://localhost:5000/${id}`, newData);
+            const response = await axios.put(`http://localhost:5000/${id}`, updatedData);
             setEntries(entries.map(entry => (entry.id === id ? response.data : entry)));
-            setError(null);
+            setEditingEntry(null);
         } catch (error) {
             console.error('Error updating entry:', error);
             setError('Failed to update entry. Please try again.');
+        } finally {
+            setLoading(false);
         }
+    };
+
+    const startEditing = (entry) => {
+        setEditingEntry(entry);
+        setSelectedEntry(null);
+    };
+
+    const cancelEditing = () => {
+        setEditingEntry(null);
     };
 
     const deleteEntry = async (id) => {
-        try {
-            await axios.delete(`http://localhost:5000/${id}`);
-            setEntries(entries.filter(entry => entry.id !== id));
+        if (window.confirm('Are you sure you want to delete this entry?')) {
+            setLoading(true);
             setError(null);
-        } catch (error) {
-            console.error('Error deleting entry:', error);
-            setError('Failed to delete entry. Please try again.');
+            try {
+                await axios.delete(`http://localhost:5000/${id}`);
+                setEntries(entries.filter(entry => entry.id !== id));
+                if (selectedEntry && selectedEntry.id === id) {
+                    setSelectedEntry(null);
+                }
+            } catch (error) {
+                console.error('Error deleting entry:', error);
+                setError('Failed to delete entry. Please try again.');
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
+    const viewEntryDetails = (entry) => {
+        setSelectedEntry(entry);
+        setEditingEntry(null);
+    };
+
+    const closeEntryDetails = () => {
+        setSelectedEntry(null);
+    };
+
     const fetchAllEntries = async () => {
+        setLoading(true);
+        setError(null);
         try {
             const response = await axios.get('http://localhost:5000/');
-            setEntries(response.data);
-            setError(null);
+            const entriesWithLocations = response.data.map(entry => ({
+                ...entry,
+                location: entry.location || localStorage.getItem(`entry_location_${entry.id}`)
+            }));
+            setEntries(entriesWithLocations);
+            setViewingEntries(true);
         } catch (error) {
             console.error('Error fetching entries:', error);
-            setError('Failed to fetch entries. Please try again.');
+            setError('Failed to fetch entries. Please check your connection and try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className='container'>
+        <div className='app'>
             <div className='main-container'>
-            <h1>Weather journal</h1>
-            <label htmlFor="date">Date</label>
-            <input
-                name='date'
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-            className='dat'/>
-          <label htmlFor="description">Description</label>
+                <h1>Weather Journal</h1>
 
-            <input
-                name='description'
-                type="text"
-                placeholder="Description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-            className='desc'/>
-            <div className='btn'>
-             <button onClick={addEntry}>Add Entry</button>
-             <button onClick={fetchAllEntries}>View Entries</button>
-            </div> 
-</div>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <div className='results'>
-                {entries.map(entry => (
-                    <div key={entry.id} className='result'>
-                        <p>Date: {entry.date}</p>
-                        <p>Description: {entry.description}</p>
-                        <p>Weather: {entry.weather}</p>
-                        <p>Temperature: {entry.temperature} °C</p>
-                        <button onClick={() => deleteEntry(entry.id)}>Delete</button>
-                        <button onClick={() => updateEntry(entry.id, { /* Updated data */ })}>Update</button>
-                    </div>
-                ))}
+                <div className='form-group'>
+                    <label htmlFor="date">
+                        <FaCalendarAlt /> Date
+                    </label>
+                    <input
+                        id='date'
+                        name='date'
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                    />
+                </div>
+
+                <div className='form-group'>
+                    <label htmlFor="location">
+                        <FaMapMarkerAlt /> Location
+                    </label>
+                    <input
+                        id='location'
+                        name='location'
+                        type="text"
+                        placeholder="Enter city name (e.g., London, New York)"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                    />
+                </div>
+
+                <div className='form-group'>
+                    <label htmlFor="description">
+                        <FaMapMarkerAlt /> Description
+                    </label>
+                    <textarea
+                        id='description'
+                        name='description'
+                        placeholder="How was the weather today?"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        rows="3"
+                    />
+                </div>
+
+                <div className='btn-group'>
+                    <button
+                        className='btn btn-primary'
+                        onClick={addEntry}
+                        disabled={loading}
+                    >
+                        {loading ? <span className="loading"></span> : <FaPlus />}
+                        Add Entry
+                    </button>
+                    <button
+                        className='btn btn-secondary'
+                        onClick={fetchAllEntries}
+                        disabled={loading}
+                    >
+                        {loading ? <span className="loading"></span> : <FaList />}
+                        View Entries
+                    </button>
+                </div>
+
+                {error && <div className='error-message'>{error}</div>}
             </div>
+
+            {selectedEntry && (
+                <div className='main-container' style={{ marginTop: '2rem' }}>
+                    <h2>Entry Details</h2>
+                    <div className='result-card' style={{ cursor: 'default' }}>
+                        <h3><FaCalendarAlt /> {new Date(selectedEntry.date).toLocaleDateString()}</h3>
+                        <p><FaMapMarkerAlt /> Location: {selectedEntry.location || `${selectedEntry.latitude?.toFixed(2)}, ${selectedEntry.longitude?.toFixed(2)}`}</p>
+                        <p>{selectedEntry.description}</p>
+                        <p className='weather-info'>
+                            <FaCloud /> Weather: {selectedEntry.weather}
+                        </p>
+                        <p className='temperature'>
+                            <FaThermometerHalf /> {selectedEntry.temperature} °C
+                        </p>
+                        <div className='card-actions'>
+                            <button
+                                className='btn btn-small btn-update'
+                                onClick={() => startEditing(selectedEntry)}
+                            >
+                                <FaEdit /> Edit
+                            </button>
+                            <button
+                                className='btn btn-small btn-delete'
+                                onClick={() => deleteEntry(selectedEntry.id)}
+                            >
+                                <FaTrash /> Delete
+                            </button>
+                            <button
+                                className='btn btn-secondary'
+                                onClick={closeEntryDetails}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {editingEntry && (
+                <div className='main-container' style={{ marginTop: '2rem' }}>
+                    <h2>Edit Entry</h2>
+                    <div className='form-group'>
+                        <label>Date</label>
+                        <input
+                            type="date"
+                            value={editingEntry.date}
+                            onChange={(e) => setEditingEntry({...editingEntry, date: e.target.value})}
+                        />
+                    </div>
+                    <div className='form-group'>
+                        <label>Location</label>
+                        <input
+                            type="text"
+                            value={editingEntry.location || `${editingEntry.latitude?.toFixed(2)}, ${editingEntry.longitude?.toFixed(2)}`}
+                            onChange={(e) => setEditingEntry({...editingEntry, location: e.target.value})}
+                        />
+                    </div>
+                    <div className='form-group'>
+                        <label>Description</label>
+                        <textarea
+                            value={editingEntry.description}
+                            onChange={(e) => setEditingEntry({...editingEntry, description: e.target.value})}
+                            rows="3"
+                        />
+                    </div>
+                    <div className='btn-group'>
+                        <button
+                            className='btn btn-primary'
+                            onClick={() => updateEntry(editingEntry.id, editingEntry)}
+                            disabled={loading}
+                        >
+                            {loading ? <span className="loading"></span> : 'Save Changes'}
+                        </button>
+                        <button
+                            className='btn btn-secondary'
+                            onClick={cancelEditing}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {viewingEntries && entries.length > 0 && !selectedEntry && !editingEntry && (
+                <div className='results'>
+                    {entries.map(entry => (
+                        <div key={entry.id || Math.random()} className='result-card' onClick={() => viewEntryDetails(entry)}>
+                            <h3><FaCalendarAlt /> {new Date(entry.date).toLocaleDateString()}</h3>
+                            <p><FaMapMarkerAlt /> {entry.location || `${entry.latitude?.toFixed(2)}, ${entry.longitude?.toFixed(2)}`}</p>
+                            <p className='weather-info'>
+                                <FaCloud /> {entry.weather}
+                            </p>
+                            <p className='temperature'>
+                                <FaThermometerHalf /> {entry.temperature} °C
+                            </p>
+                            <div className='card-actions'>
+                                <button
+                                    className='btn btn-small btn-update'
+                                    onClick={(e) => { e.stopPropagation(); startEditing(entry); }}
+                                >
+                                    <FaEdit /> Edit
+                                </button>
+                                <button
+                                    className='btn btn-small btn-delete'
+                                    onClick={(e) => { e.stopPropagation(); deleteEntry(entry.id); }}
+                                >
+                                    <FaTrash /> Delete
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
